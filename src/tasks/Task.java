@@ -84,10 +84,11 @@ public class Task {
         return Objects.equals(id, otherTask.id);
     }
 
-    // Генерация Хэш-кода по имени задачи, её описанию и классу (задача и подзадача с одинаковыми именем и описанием)
+    // ?? Генерация Хэш-кода по id. Верно ли??
     @Override
     public int hashCode() {
-        int hash = 17;
+        int hash = id;
+        /*int hash = 17;
         if (taskName != null) {
             hash = taskName.hashCode();
         }
@@ -95,7 +96,7 @@ public class Task {
         if (taskDescription != null) {
             hash = hash + taskDescription.hashCode();
         }
-        hash = hash + getClass().hashCode();
+        hash = hash + getClass().hashCode();*/
         return hash;
     }
 

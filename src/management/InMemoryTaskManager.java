@@ -148,7 +148,7 @@ public class InMemoryTaskManager implements TaskManager {
     // Удаление эпика по id (f)
     @Override
     public void removeEpic(int id) {
-        final Epic epic = epics.remove(id);
+        final Epic epic = epics.remove(id); // ??Не помню, почему final??
         for (Integer subtaskId : epic.getSubTaskIds()) {
             subTasks.remove(subtaskId);
         }
