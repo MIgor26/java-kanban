@@ -45,7 +45,7 @@ public class Epic extends Task {
     // Установка статуса эпика
     @Override
     public void setStatus(Status status) {
-        super.setStatus(status); //??Не помню зачем переопределил данный метод??
+        super.setStatus(status); //??Не помню зачем переопределил данный метод
     }
 
     // Вывод на печать наименование эпика, кол-во символов описания и количество подзадач

@@ -1,5 +1,3 @@
-// Вполне возможно нужно провести рефакторинг SubTask переименовать в Subtask
-
 package tasks;
 
 public class SubTask extends Task {

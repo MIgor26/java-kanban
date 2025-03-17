@@ -84,19 +84,9 @@ public class Task {
         return Objects.equals(id, otherTask.id);
     }
 
-    // ?? Генерация Хэш-кода по id. Верно ли??
     @Override
     public int hashCode() {
         int hash = id;
-        /*int hash = 17;
-        if (taskName != null) {
-            hash = taskName.hashCode();
-        }
-        hash = hash * 31;
-        if (taskDescription != null) {
-            hash = hash + taskDescription.hashCode();
-        }
-        hash = hash + getClass().hashCode();*/
         return hash;
     }
 

@@ -53,29 +53,34 @@ public class Main {
         final int subTaskId3_2 = manager.addSubTask(subTask3_2);
         final int subTaskId3_3 = manager.addSubTask(subTask3_3);
 
-        System.out.println("\n***");
-        System.out.println("   Этап №1. Создание задач");
+        System.out.println("    Этап №1. В менеджере задач хранятся следующие задачи, эпики и подзадачи");
         System.out.println("Список задач: " + manager.getTasks());
         System.out.println("Список эпиков: " + manager.getEpics());
         System.out.println("Список подзадач: " + manager.getSubTasks());
 
-        System.out.println("\n***\n   Тест истории просмотров");
+        System.out.println("\n***\n    Этап №2. Обращение к задачам, эпикам и подзадачам");
         System.out.println("Задачи:");
         for (Task task: manager.getTasks()) {
             System.out.println(manager.getTask(task.getId()));
         }
+        System.out.println("Эпик:" + manager.getEpic(epicId3));
+        System.out.println("Подзадача: " + manager.getSubTask(subTaskId1_1));
+        System.out.println("Повторное обращение к 3 задаче" + manager.getTask(taskId3));
+        System.out.println("Повторное обращение к 1 задаче" + manager.getTask(taskId1));
 
-        System.out.println(manager.getTask(taskId1));
-        System.out.println(manager.getTask(taskId1));
-        System.out.println(manager.getTask(taskId1));
-
-        System.out.println("Эпики с подзадачами: ");
-        for (Task epic : manager.getEpics()) {
-            System.out.println(manager.getEpic(epic.getId()));
-            System.out.println("включает подзадачи: " + manager.getEpicSubTasks(epic.getId()));
+        System.out.println("\n***\n    Этап 3. История обращения к задачам:");
+        for (Task task : manager.getHistoryManager()) {
+            System.out.println(task);
         }
 
-        System.out.println("История:");
+        System.out.println("\n***\n    Этап 4. Проверки истории задач, после из удаления.");
+        manager.removeTask(taskId3);
+        System.out.println("\n  После удаления 3-ей задачи история обращений следующая.");
+        for (Task task : manager.getHistoryManager()) {
+            System.out.println(task);
+        }
+        manager.clearTask();
+        System.out.println("\n  После удаления всех задач история обращений следующая.");
         for (Task task : manager.getHistoryManager()) {
             System.out.println(task);
         }
