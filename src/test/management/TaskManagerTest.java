@@ -1,4 +1,4 @@
-package Test.management;
+package test.management;
 
 import management.HistoryManager;
 import management.InMemoryTaskManager;
@@ -23,11 +23,11 @@ public class TaskManagerTest {
         Epic epic1 = new Epic("Epic #1", "Epic #1 description");
         final int epicId1 = manager.addEpic(epic1);
         // Создание подзадачи с id(подзадачи) = id(эпика) (при равенстве id это один и тот же объект)
-        SubTask subTask1_1 = new SubTask("SubTask #1_1", "", Status.NEW, epicId1, epicId1);
-        final int subTaskId1_1 = manager.addSubTask(subTask1_1);
+        SubTask subTask11 = new SubTask("SubTask #11", "", Status.NEW, epicId1, epicId1);
+        final int subTaskId11 = manager.addSubTask(subTask11);
 
         // Проверка. Если id не равны, значит это разные объекты
-        assertNotEquals(epic1.getId(), subTask1_1.getId(), "Эпик можно добавить в самого себя как подзадачу");
+        assertNotEquals(epic1.getId(), subTask11.getId(), "Эпик можно добавить в самого себя как подзадачу");
     }
 
     /*Подзадача не может стать своим эпиком. Тут только, если пользователь ошибётся и не верно вручную введёт
@@ -60,15 +60,15 @@ public class TaskManagerTest {
         // Подготовка. Создание и добавление одного эпика и двух подзадач для него
         Epic epic1 = new Epic("Epic #1", "Epic #1 description");
         final int epicId1 = manager.addEpic(epic1);
-        SubTask subTask1_1 = new SubTask("SubTask #1_1", "", Status.NEW, epicId1);
-        SubTask subTask1_2 = new SubTask("SubTask #1_2", "", Status.NEW, epicId1);
-        final int subTaskId1_1 = manager.addSubTask(subTask1_1);
-        final int subTaskId1_2 = manager.addSubTask(subTask1_2);
+        SubTask subTask11 = new SubTask("SubTask #11", "", Status.NEW, epicId1);
+        SubTask subTask12 = new SubTask("SubTask #12", "", Status.NEW, epicId1);
+        final int subTaskId11 = manager.addSubTask(subTask11);
+        final int subTaskId12 = manager.addSubTask(subTask12);
 
         // Проверка
         assertNotNull(manager.getEpic(epicId1), "Эпик со сгенерированным id не найден");
-        assertNotNull(manager.getSubTask(subTaskId1_1), "Подзадача1 со сгенерированным id не найдена");
-        assertNotNull(manager.getSubTask(subTaskId1_2), "Подзадача2 со сгенерированным id не найдена");
+        assertNotNull(manager.getSubTask(subTaskId11), "Подзадача1 со сгенерированным id не найдена");
+        assertNotNull(manager.getSubTask(subTaskId12), "Подзадача2 со сгенерированным id не найдена");
         assertEquals(1, manager.getEpics().size(), "В списке эпиков не один эпик");
         assertEquals(2, manager.getSubTasks().size(), "В списке подзадач не две подзадачи");
     }

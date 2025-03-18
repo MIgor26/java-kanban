@@ -1,4 +1,4 @@
-package Test.management;
+package test.management;
 
 import management.HistoryManager;
 import management.Managers;
@@ -17,7 +17,7 @@ public class HistoryManagerTest {
     TaskManager manager = Managers.getDefault();
 
     @Test
-        // Задача, к которой происходит повторное обращение, перемещается списка
+        // Задача, к которой происходит повторное обращение, перемещается в конец списка
     void addTaskEndList() {
         // Создание задач
         Task task1 = new Task("Task #1", "Task #1 description", Status.NEW);
@@ -34,7 +34,8 @@ public class HistoryManagerTest {
         manager.getTask(task2.getId());
 
         // Проверка
-        assertEquals(manager.getHistoryManager(), List.of(task1, task3, task2));
+        assertEquals(manager.getHistoryManager(), List.of(task1, task3, task2), "Задача, к которое происходит"
+        + " повторное обращение не перемещается в конец списка.");
 
     }
 
@@ -56,12 +57,8 @@ public class HistoryManagerTest {
         // Удаление 2 задачи (не крайней)
         manager.removeTask(task2.getId());
         // Проверка
-        assertEquals(manager.getHistoryManager(), List.of(task1, task3));
-
-        // Удаление первой задачи
-        manager.removeTask(task1.getId());
-        // Проверка
-        assertEquals(manager.getHistoryManager(), List.of(task3));
+        assertEquals(manager.getHistoryManager(), List.of(task1, task3), "Удаляемая не крайняя задача не"
+        + " удаляется из истории.");
     }
 
     @Test
@@ -83,7 +80,43 @@ public class HistoryManagerTest {
         manager.removeTask(task1.getId());
         manager.removeTask(task3.getId());
         // Проверка
-        assertEquals(manager.getHistoryManager(), List.of(task2));
+        assertEquals(manager.getHistoryManager(), List.of(task2), "Удаляемая крайняя задача не удаляется"
+        + " из списка истории.");
+    }
+
+    @Test
+        // При удалении единственной задачи, история просмотров обнуляется
+    void deleteOnceTaskFromHistoru() {
+        // Создание задач
+        Task task1 = new Task("Task #1", "Task #1 description", Status.NEW);
+        manager.addTask(task1);
+
+        // Обращение к задачам
+        manager.getTask(task1.getId());
+
+        // Удаление единственной задачи
+        manager.removeTask(task1.getId());
+
+        // Проверка
+        assertEquals(manager.getHistoryManager(), List.of(), "При удалении единственной задачи история"
+                + " просмотров не обнуляется.");
+    }
+
+    @Test
+        // При обращении к одной и той же задаче два раза подряд (при чём в самом начале работы менеджера история задач
+        // сохраняет одно обращение
+    void sameTaskTwiceAtTheBeginning() {
+        // Создание задач
+        Task task1 = new Task("Task #1", "Task #1 description", Status.NEW);
+        manager.addTask(task1);
+
+        // Обращение к задаче 2 раза подряд
+        manager.getTask(task1.getId());
+        manager.getTask(task1.getId());
+
+        // Проверка
+        assertEquals(manager.getHistoryManager(), List.of(task1), "При обращении к одной и той же задаче 2 раза"
+                + " подряд в самом начале работы - история просмотра задач работает некорректно.");
     }
 
 }

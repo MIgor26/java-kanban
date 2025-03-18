@@ -38,7 +38,10 @@ public class InMemoryHistoryManager implements HistoryManager {
     }
 
     private void removeNode(Node node) {
-        if (node.prev == null) { // Если удаляется первый элемент
+        if (node.prev == null && node.next == null) { // Если удаляется единственный элемент списка
+            first = null;
+            last = null;
+        } else if (node.prev == null) { // Если удаляется первый элемент
             first = node.next;
             first.prev = null;
         } else if (node.next == null) { // Если удаляется последний элемент
