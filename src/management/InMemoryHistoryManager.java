@@ -38,18 +38,17 @@ public class InMemoryHistoryManager implements HistoryManager {
     }
 
     private void removeNode(Node node) {
-        if (node.prev == null && node.next == null) { // Если удаляется единственный элемент списка
-            first = null;
-            last = null;
-        } else if (node.prev == null) { // Если удаляется первый элемент
+        if (node.prev != null) {
+            node.prev.next = node.next;
+        } else {
             first = node.next;
             first.prev = null;
-        } else if (node.next == null) { // Если удаляется последний элемент
+        }
+        if (node.next != null) {
+            node.next.prev = node.prev;
+        } else {
             last = node.prev;
             last.next = null;
-        } else {
-            node.prev.next = node.next;
-            node.next.prev = node.prev;
         }
         history.remove(node.item.getId());
     }
