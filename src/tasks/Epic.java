@@ -2,9 +2,10 @@ package tasks;
 
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Epic extends Task {
-    private HashMap<Integer, SubTask> subTasks = new HashMap<>(); // Список подзадач
+    private ArrayList<SubTask> subTasks = new ArrayList<>(); // Список id подзадач
 
     // Конструктор для эпика
     public Epic(String taskName, String taskDescription) {
@@ -12,24 +13,38 @@ public class Epic extends Task {
         super.setStatus(Status.NEW);
     }
 
-    // Конструктор новый для тестов
+    // Конструктор для тестов
     public Epic(String taskName, String taskDescription, int id) {
         super(taskName, taskDescription, id);
     }
 
+    // Конструктор для FileBackedTaskManager
+    public Epic(String taskName, String taskDescription, Status status, int id) {
+        super(taskName, taskDescription, status, id);
+    }
+
+    @Override
+    public TaskType getType() {
+        return TaskType.EPIC;
+    }
+
     // Возвращение списка подзадач для эпика
     public ArrayList<SubTask> getEpicSubTasks() {
-        return new ArrayList<>(subTasks.values());
+        return subTasks;
     }
 
     // Возвращение id подзадач для эпика
     public ArrayList<Integer> getSubTaskIds() {
-        return new ArrayList<>(subTasks.keySet());
+        ArrayList<Integer> listIdSubTask = new ArrayList<>();
+        for (int i = 0; i < subTasks.size(); i++) {
+            listIdSubTask.add(subTasks.get(i).getId());
+        }
+        return listIdSubTask;
     }
 
     // Добавление подзадач для эпика в список
     public void putEpicSubTasks(SubTask subTask) {
-        subTasks.put(subTask.getId(), subTask);
+        subTasks.add(subTask);
     }
 
     // Удаление подзадач из списка эпика

@@ -42,13 +42,13 @@ public class InMemoryHistoryManager implements HistoryManager {
             node.prev.next = node.next;
         } else {
             first = node.next;
-            first.prev = null;
+            //first.prev = null; ?? Не понимаю, почему не нужна данная строка?
         }
         if (node.next != null) {
             node.next.prev = node.prev;
         } else {
             last = node.prev;
-            last.next = null;
+            //last.next = null;
         }
         history.remove(node.item.getId());
     }

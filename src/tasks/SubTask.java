@@ -15,9 +15,14 @@ public class SubTask extends Task {
     }
 
     // Конструктор новый для тестов
-    public SubTask(String taskName, String taskDescription, Status status, int epicId, int id) {
+    public SubTask(String taskName, String taskDescription, Status status, int id, int epicId) {
         super(taskName, taskDescription, status, id);
         this.epicId = epicId;
+    }
+
+    @Override
+    public TaskType getType() {
+        return TaskType.SUB_TASK;
     }
 
     // Доступ к id эпика для подзадачи

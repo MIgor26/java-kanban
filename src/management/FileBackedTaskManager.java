@@ -1,28 +1,117 @@
 package management;
 
-import tasks.Epic;
-import tasks.Status;
-import tasks.SubTask;
-import tasks.Task;
+import tasks.*;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.HashMap;
+import java.util.Map;
 
-public class InMemoryTaskManager implements TaskManager {
-    protected HashMap<Integer, Task> tasks = new HashMap<>(); // Мапа с задачами
-    protected HashMap<Integer, Epic> epics = new HashMap<>(); // Мапа с эпиками
-    protected HashMap<Integer, SubTask> subTasks = new HashMap<>(); // Мапа с подзадачами
-    protected int countId = 0; // Счётчик id
-    protected HistoryManager historyManager = Managers.getDefaultHistory();
+public class FileBackedTaskManager extends InMemoryTaskManager {
+    private File file;
 
-//    public InMemoryTaskManager (HistoryManager historyManager) { // !! ТЗ7 Конструктор для ФайлМенеджер
-//        this.historyManager = historyManager;
-//    }
+    public FileBackedTaskManager(File file) {
+        this.file = file;
+    }
 
-    // Доступ к HistoryManager без TaskManager
-    public List<Task> getHistoryManager() {
-        return historyManager.getHistory();
+    // Загрузка из файла Таск Менеджера
+    public static FileBackedTaskManager loadFromFile(File file) {
+        FileBackedTaskManager manager = new FileBackedTaskManager(file);
+        HistoryManager historyManager = Managers.getDefaultHistory();
+        manager.loadFromFile(); // Отдельный нестатический метод, так как поля нестатические
+        return manager;
+    }
+
+    // Формирование полей Файл Менеджера
+    private void loadFromFile() {
+        // Files.readString(file.toPath()); !! Так было предложено в ТЗ. Я не знаю как лучше
+        try (FileReader fr = new FileReader(file, StandardCharsets.UTF_8); BufferedReader br = new BufferedReader(fr)) {
+            br.readLine(); // Пропускаем первую строку
+            int maxId = 0;
+
+            while (br.ready()) {
+                String line = br.readLine();
+                Task task = fromString(line);
+                final int id = task.getId();
+                if (id > maxId) maxId = id;
+                if (task.getType() == TaskType.EPIC) {
+                    epics.put(id, (Epic) task);
+                } else if (task.getType() == TaskType.TASK) {
+                    tasks.put(id, task);
+                } else {
+                    subTasks.put(id, (SubTask) task);
+                    int epicId = ((SubTask) task).getEpicId();
+                    epics.get(epicId).putEpicSubTasks((SubTask) task); // Кладём Сабтаск в список Эпика. Способ работает,
+                    // в случае, если первыми в файле идут Эпики.
+                }
+            }
+            countId = maxId;
+        } catch (FileNotFoundException e) { // ?? Нужно ли своё исключение добавить
+            e.printStackTrace();
+        } catch (IOException e) { // ?? Нужно ли своё исключение добавить
+            e.printStackTrace();
+        }
+    }
+
+    // Формирование задачи из очередной считанной линии из файла
+    private Task fromString(String value) {
+        String[] taskStr = value.split(",", 6); // !! Проверить для чего лимит
+        Task task = null;
+        TaskType type = TaskType.valueOf(taskStr[1]);
+        switch (type) {
+            case EPIC:
+                task = new Epic(taskStr[2], taskStr[4], Status.valueOf(taskStr[3]), Integer.parseInt(taskStr[0]));
+                break;
+            case TASK:
+                task = new Task(taskStr[2], taskStr[4], Status.valueOf(taskStr[3]), Integer.parseInt(taskStr[0]));
+                break;
+            case SUB_TASK:
+                task = new SubTask(taskStr[2], taskStr[4], Status.valueOf(taskStr[3]), Integer.parseInt(taskStr[0]),
+                        Integer.parseInt(taskStr[5]));
+                break;
+        }
+        return task;
+    }
+
+    // Сохранение Файл менеджера в файл
+    private void save() {
+        try (FileWriter fw = new FileWriter(file, StandardCharsets.UTF_8);
+             BufferedWriter bw = new BufferedWriter(fw)) {
+            bw.write("id,type,name,status,description,epic" + "\n"); // Запись заголовка
+            // Сначала записываем эпики, для корректной работы метода loadFromFile, а именно эпики должны считываться
+            // до сабтасков, чтобы в эпики добавить список сабтасков
+            for (Map.Entry<Integer, Epic> entry : epics.entrySet()) {
+                bw.append(toString(entry.getValue()));
+                bw.newLine();
+            }
+            // Запись тасков
+            for (Map.Entry<Integer, Task> entry : tasks.entrySet()) {
+                bw.append(toString(entry.getValue()));
+                bw.newLine();
+            }
+            // Запись сабтасков
+            for (Map.Entry<Integer, SubTask> entry : subTasks.entrySet()) {
+                bw.append(toString(entry.getValue()));
+                bw.newLine();
+            }
+        } catch (IOException e) {
+            throw new ManagerSaveException("Ошибка в файле: " + file.getName(), e);
+        }
+    }
+
+    // Сохранение задачи в строку
+    private String toString(Task task) {
+        TaskType type = task.getType();
+        if (type.equals(TaskType.SUB_TASK)) {
+            String taskStr = (task.getId() + "," + type + "," + task.getTaskName() + "," + task.getStatus() + ","
+                    + task.getTaskDescription() + "," + ((SubTask)task).getEpicId());
+            return taskStr;
+        } else {
+            String taskStr = (task.getId() + "," + type + "," + task.getTaskName() + "," + task.getStatus() + ","
+                    + task.getTaskDescription() + ",");
+            return taskStr;
+        }
     }
 
     // Получение списка задач (a)
@@ -50,6 +139,7 @@ public class InMemoryTaskManager implements TaskManager {
             historyManager.remove(task.getId());
         }
         tasks.clear();
+        save();
     }
 
     // Удаление всех эпиков (b)
@@ -63,6 +153,7 @@ public class InMemoryTaskManager implements TaskManager {
             historyManager.remove(subTask.getId());
         }
         subTasks.clear(); // Также удаляются все подзадачи
+        save();
     }
 
     // Удаление всех подзадач (b)
@@ -78,6 +169,7 @@ public class InMemoryTaskManager implements TaskManager {
         for (Epic epic : epics.values()) { // Удаление для всех эпиков мап с подзадачами
             epic.clearEpicSubTask();
         }
+        save();
     }
 
     // Получение по id задачи (c)
@@ -113,6 +205,7 @@ public class InMemoryTaskManager implements TaskManager {
         countId++;
         newTask.setId(countId);
         tasks.put(countId, newTask);
+        save();
         return countId;
     }
 
@@ -122,6 +215,7 @@ public class InMemoryTaskManager implements TaskManager {
         countId++;
         newEpic.setId(countId);
         epics.put(countId, newEpic);
+        save();
         return countId;
     }
 
@@ -133,6 +227,7 @@ public class InMemoryTaskManager implements TaskManager {
         subTasks.put(countId, newSubTask);
         epics.get(newSubTask.getEpicId()).putEpicSubTasks(newSubTask); // Добавление подзадачи в список эпика
         updateEpicStatus(newSubTask.getEpicId()); // Обновление статуса эпика к которому относится подзадача
+        save();
         return countId;
     }
 
@@ -140,12 +235,14 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void updateTask(Task updTask) {
         tasks.put(updTask.getId(), updTask);
+        save();
     }
 
     // Обновление эпика (e)
     @Override
     public void updateEpic(Epic updEpic) {
         epics.put(updEpic.getId(), updEpic);
+        save();
     }
 
     // Обновление подзадачи (e)
@@ -153,6 +250,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void updateSubTask(SubTask updSubTask) {
         subTasks.put(updSubTask.getId(), updSubTask);
         updateEpicStatus(updSubTask.getEpicId()); // Обновление статуса эпика к которому относится подзадача
+        save();
     }
 
     // Удаление задачи по id (f)
@@ -160,6 +258,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void removeTask(int id) {
         historyManager.remove(id);
         tasks.remove(id);
+        save();
     }
 
     // Удаление эпика по id (f)
@@ -170,6 +269,7 @@ public class InMemoryTaskManager implements TaskManager {
         for (Integer subtaskId : epic.getSubTaskIds()) {
             historyManager.remove(subtaskId); // Удаление Субтасков из истории при удалении Эпика
             subTasks.remove(subtaskId);
+            save();
         }
     }
 
@@ -181,6 +281,7 @@ public class InMemoryTaskManager implements TaskManager {
         subTasks.remove(id);
         epics.get(epicId).removeEpicSubTask(id); // Удаление подзадачи в поле эпика
         updateEpicStatus(epicId); // Обновление статуса эпика к которому относится подзадача
+        save();
     }
 
     // Получение подзадач для заданного по id эпика
@@ -218,3 +319,6 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 }
+
+
+

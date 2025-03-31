@@ -21,7 +21,7 @@ public class Task {
         this.taskDescription = taskDescription;
     }
 
-    // Конструктор новый для тестов
+    // Конструктор для FileBackedTaskManager
     public Task(String taskName, String taskDescription, Status status, int id) {
         this.taskName = taskName;
         this.taskDescription = taskDescription;
@@ -34,6 +34,11 @@ public class Task {
         this.taskName = taskName;
         this.taskDescription = taskDescription;
         this.id = id;
+    }
+
+    // Получение типа задачи
+    public TaskType getType() {
+        return TaskType.TASK;
     }
 
     // Доступ к имени задачи в других классах
