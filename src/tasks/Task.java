@@ -78,12 +78,12 @@ public class Task {
 
     // Инициализация статуса в других классах
     public void setStatus(Status status) {
-        this.status = status;;
+        this.status = status;
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj) return  true;
+        if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         Task otherTask = (Task) obj;
         return Objects.equals(id, otherTask.id);
@@ -99,7 +99,7 @@ public class Task {
     @Override
     public String toString() {
         String result = "\"" + taskName + "\", ";
-        if (taskDescription != null ) {
+        if (taskDescription != null) {
             result = result + "описание: " + taskDescription.length() + " симв., ";
         } else {
             result = result + "Описание отсутствует, ";

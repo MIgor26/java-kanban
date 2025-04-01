@@ -7,6 +7,7 @@ import tasks.Task;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLOutput;
+import java.util.ArrayList;
 
 public class Main {
     public static void main(String[] args) {
@@ -42,13 +43,19 @@ public class Main {
         System.out.println("Список подзадач: " + fbm1.getSubTasks());
         
 
-        File file2 = new File("D:\\Java\\Project\\java-kanban\\src\\tasks.csv");
+        File file2 = new File("D:\\Java\\Project\\java-kanban\\src\\resources\\tasks.csv");
         FileBackedTaskManager fbm2 = FileBackedTaskManager.loadFromFile(file2);
         System.out.println("***");
         System.out.println("Список задач из стороннего файла");
         System.out.println("Список задач: " + fbm2.getTasks());
         System.out.println("Список эпиков: " + fbm2.getEpics());
         System.out.println("Список подзадач: " + fbm2.getSubTasks());
+        System.out.println("Получение по ИД Задачи = " + fbm2.getTask(1));
+
+        fbm2.updateTask(new Task("Task1", "hj", Status.IN_PROGRESS, 1));
+        System.out.println("Обновлённая задача 1 = " + fbm2.getTask(1));
+        ArrayList<SubTask> listForEpic = fbm2.getEpicSubTasks(2);
+        System.out.println("Подзадачи для Эпика " + listForEpic);
 
 
 
