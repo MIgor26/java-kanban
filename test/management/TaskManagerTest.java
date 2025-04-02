@@ -1,9 +1,5 @@
-package test.management;
+package management;
 
-import management.HistoryManager;
-import management.InMemoryTaskManager;
-import management.Managers;
-import management.TaskManager;
 import org.junit.jupiter.api.Test;
 import tasks.Epic;
 import tasks.Status;

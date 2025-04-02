@@ -1,6 +1,5 @@
-package test.management;
+package management;
 
-import management.*;
 import org.junit.jupiter.api.Test;
 import tasks.*;
 
