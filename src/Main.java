@@ -17,6 +17,7 @@ public class Main {
         } catch (IOException e) {
             System.out.println(e);
         }
+        
         FileBackedTaskManager fbm = Managers.getDefaultFile(file1);
         Task task1 = new Task("Task #1", "Task #1 description", Status.NEW);
         Task task2 = new Task("Task #2", "Task #2 description", Status.NEW);
@@ -40,7 +41,6 @@ public class Main {
         System.out.println("Список задач: " + fbm1.getTasks());
         System.out.println("Список эпиков: " + fbm1.getEpics());
         System.out.println("Список подзадач: " + fbm1.getSubTasks());
-        
 
         File file2 = new File("D:\\Java\\Project\\java-kanban\\src\\resources\\tasks.csv");
         FileBackedTaskManager fbm2 = FileBackedTaskManager.loadFromFile(file2);
@@ -55,8 +55,5 @@ public class Main {
         System.out.println("Обновлённая задача 1 = " + fbm2.getTask(1));
         ArrayList<SubTask> listForEpic = fbm2.getEpicSubTasks(2);
         System.out.println("Подзадачи для Эпика " + listForEpic);
-
-
-
     }
 }

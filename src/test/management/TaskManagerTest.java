@@ -96,5 +96,4 @@ public class TaskManagerTest {
         assertEquals("Description", manager.getTask(taskId1).getTaskDescription(), "Описание изменилось");
         assertEquals(Status.NEW, manager.getTask(taskId1).getStatus(), "Статус изменился");
     }
-
 }

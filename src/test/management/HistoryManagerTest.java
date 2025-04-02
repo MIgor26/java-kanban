@@ -35,7 +35,7 @@ public class HistoryManagerTest {
 
         // Проверка
         assertEquals(manager.getHistoryManager(), List.of(task1, task3, task2), "Задача, к которое происходит"
-        + " повторное обращение не перемещается в конец списка.");
+                + " повторное обращение не перемещается в конец списка.");
 
     }
 
@@ -58,7 +58,7 @@ public class HistoryManagerTest {
         manager.removeTask(task2.getId());
         // Проверка
         assertEquals(manager.getHistoryManager(), List.of(task1, task3), "Удаляемая не крайняя задача не"
-        + " удаляется из истории.");
+                + " удаляется из истории.");
     }
 
     @Test
@@ -81,7 +81,7 @@ public class HistoryManagerTest {
         manager.removeTask(task3.getId());
         // Проверка
         assertEquals(manager.getHistoryManager(), List.of(task2), "Удаляемая крайняя задача не удаляется"
-        + " из списка истории.");
+                + " из списка истории.");
     }
 
     @Test
@@ -118,5 +118,4 @@ public class HistoryManagerTest {
         assertEquals(manager.getHistoryManager(), List.of(task1), "При обращении к одной и той же задаче 2 раза"
                 + " подряд в самом начале работы - история просмотра задач работает некорректно.");
     }
-
 }
