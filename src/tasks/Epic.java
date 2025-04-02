@@ -1,8 +1,6 @@
 package tasks;
 
-import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.List;
 
 public class Epic extends Task {
     private ArrayList<SubTask> subTasks = new ArrayList<>(); // Список id подзадач
