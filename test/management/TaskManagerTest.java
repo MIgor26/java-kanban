@@ -6,12 +6,15 @@ import tasks.Status;
 import tasks.SubTask;
 import tasks.Task;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class TaskManagerTest {
+public abstract class TaskManagerTest<T extends TaskManager> {
+    T manager;
 
-    private TaskManager manager = new InMemoryTaskManager();
+    abstract TaskManager getTaskManager();
 
     @Test // Объект Epic нельзя добавить в самого себя в виде подзадачи;
     public void epicCanNotYourselfSubtask() {
@@ -24,20 +27,6 @@ public class TaskManagerTest {
 
         // Проверка. Если id не равны, значит это разные объекты
         assertNotEquals(epic1.getId(), subTask11.getId(), "Эпик можно добавить в самого себя как подзадачу");
-    }
-
-    /*Подзадача не может стать своим эпиком. Тут только, если пользователь ошибётся и не верно вручную введёт
-    номер эпика. Но про защиту от неправильного ввода id эпика для подзадачи не сказано.*/
-
-    @Test // Утилитарный класс всегда возвращает проинициализированные и готовые к работе экземпляры менеджеров
-    public void managerMakeCorrectManager() {
-        // Создание менеджеров задач и истории через Managers
-        TaskManager manager = Managers.getDefault();
-        HistoryManager historyManager = Managers.getDefaultHistory();
-
-        // Проверка
-        assertNotNull(manager, "Утилитарный класс не верно возвращает менеджер задач");
-        assertNotNull(historyManager, "Утилитарный класс не верно возвращает менеджер истории");
     }
 
     @Test //  InMemoryTaskManager добавляет задачи и может найти их по id
@@ -92,4 +81,20 @@ public class TaskManagerTest {
         assertEquals("Description", manager.getTask(taskId1).getTaskDescription(), "Описание изменилось");
         assertEquals(Status.NEW, manager.getTask(taskId1).getStatus(), "Статус изменился");
     }
+
+    @Test
+    public void correctCalculatOfIntervalIntersection() { //Корректный расчёт пересечения интервалов
+        // Подготовка
+        Task task1 = new Task("Task #1", "Task #1 description", Status.NEW,
+                LocalDateTime.now(), Duration.ofMinutes(60));
+        Task task2 = new Task("Task #2", "Task #2 description", Status.NEW,
+                LocalDateTime.now().plusMinutes(10), Duration.ofMinutes(60));
+        final int taskid1 = manager.addTask(task1);
+        final int taskid2 = manager.addTask(task2);
+
+        //Проверка
+        assertFalse(manager.getTasks().contains(task2), "Расчёт пересечения работает некорректно");
+    }
+
+
 }

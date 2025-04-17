@@ -1,0 +1,13 @@
+1. Быть может этот блок кода (он повторяется 3 раза в InMemoryTaskManager) стоит собрать в один метод
+    updateEpicStatus(epicId); // Обновление статуса эпика к которому относится подзадача
+    updateEpicStartTime(epicId); // Обновление времени начала эпика
+    updateEpicEndTime(epicId); // Обновление времени окончания эпика
+    updateEpicDurationTime(epicId); // Обновление продолжительности эпика
+
+2. Описание toString в задачах сделать более читаемым, отформатировав дату и продолжительность и добавив проверки на null
+
+3. В InMemoryHistoryManager в методе void removeNode(Node node) разобраться почему не нужна данная строка:
+    first.prev = null;
+
+4. В FileBackedTaskManager разобраться для чего указан лимит в методе Task fromString(String value)
+        String[] taskStr = value.split(",", 9); Лимит 9

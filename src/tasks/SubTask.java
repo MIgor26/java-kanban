@@ -1,25 +1,38 @@
 package tasks;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
+
 public class SubTask extends Task {
     private int epicId; // Идентификатор эпика, к которому принадлежит подзадача
 
-    // Конструктор для новой подзадачи
+    // Конструктор для подзадачи
     public SubTask(String taskName, String taskDescription, Status status, int epicId) {
         super(taskName, taskDescription, status);
         this.epicId = epicId;
     }
 
-    // Конструктор без изменения статуса
-    public SubTask(String taskName, String taskDescription) {
-        super(taskName, taskDescription);
+    // Конструктор со временем начала и продолжительностью
+    public SubTask(String taskName, String taskDescription, Status status, int epicId, LocalDateTime startTime,
+                   Duration duration) {
+        super(taskName, taskDescription, status, startTime, duration);
+        this.epicId = epicId;
     }
 
-    // Конструктор новый для тестов
+    // Конструктор для FileBackedTaskManager
     public SubTask(String taskName, String taskDescription, Status status, int id, int epicId) {
         super(taskName, taskDescription, status, id);
         this.epicId = epicId;
     }
 
+    // Конструктор для FileBackedTaskManager со временем
+    public SubTask(String taskName, String taskDescription, Status status, LocalDateTime startTime, Duration duration,
+                   int id, int epicId) {
+        super(taskName, taskDescription, status, startTime, duration, id);
+        this.epicId = epicId;
+    }
+
+    // Получение типа Подзадачи
     @Override
     public TaskType getType() {
         return TaskType.SUB_TASK;
@@ -30,12 +43,6 @@ public class SubTask extends Task {
         return epicId;
     }
 
-    // Установка id эпика для подзадачи
-    public void setEpicId(int epicId) {
-        this.epicId = epicId;
-    }
-
-    // Вывод на печать наименование эпика и список подзадач для него с кол-вом символов описания
     @Override
     public String toString() {
         String result = "\"" + super.getTaskName() + "\", ";
@@ -46,6 +53,8 @@ public class SubTask extends Task {
         }
         result = result + "для эпика с id = " + epicId;
         result = result + ", статус = " + super.getStatus();
+        result = result + ", начало: " + super.getStartTime();
+        result = result + ", продолжительность: " + super.getDuration();
         result = result + ", id = " + super.getId();
         return result;
     }

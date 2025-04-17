@@ -12,58 +12,58 @@ public interface TaskManager {
     // Обращение к методу менеджера истории
     List<Task> getHistoryManager();
 
-    // Получение списка задач (a)
+    // Получение списка задач
     ArrayList<Task> getTasks();
 
-    // Получение списка эпиков (a)
+    // Получение списка эпиков
     ArrayList<Epic> getEpics();
 
-    // Получение списка подзадач (a)
+    // Получение списка подзадач
     ArrayList<SubTask> getSubTasks();
 
-    // Удаление всех задач (b)
+    // Удаление всех задач
     void clearTask();
 
-    // Удаление всех эпиков (b)
+    // Удаление всех эпиков
     void clearEpic();
 
-    // Удаление всех подзадач (b)
+    // Удаление всех подзадач
     void clearSubTask();
 
-    // Получение по id задачи (c)
+    // Получение по id задачи
     Task getTask(int id);
 
-    // Получение по id эпика (c)
+    // Получение по id эпика
     Epic getEpic(int id);
 
-    // Получение по id подзадачи (c)
+    // Получение по id подзадачи
     SubTask getSubTask(int id);
 
-    // Создание новой задачи (d)
+    // Создание новой задачи
     int addTask(Task newTask);
 
-    // Создание нового эпика (d)
+    // Создание нового эпика
     int addEpic(Epic newEpic);
 
-    // Создание новой подзадачи (d)
+    // Создание новой подзадачи
     int addSubTask(SubTask newSubTask);
 
-    // Обновление задачи (e)
+    // Обновление задачи
     void updateTask(Task updTask);
 
-    // Обновление эпика (e)
+    // Обновление эпика
     void updateEpic(Epic updEpic);
 
-    // Обновление подзадачи (e)
+    // Обновление подзадачи
     void updateSubTask(SubTask updSubTask);
 
-    // Удаление задачи по id (f)
+    // Удаление задачи по id
     void removeTask(int id);
 
-    // Удаление эпика по id (f)
+    // Удаление эпика по id
     void removeEpic(int id);
 
-    // Удаление подзадачи по id (f)
+    // Удаление подзадачи по id
     void removeSubTask(int id);
 
     // Получение подзадач для заданного по id эпика
@@ -71,4 +71,19 @@ public interface TaskManager {
 
     // Обновление статуса эпика
     void updateEpicStatus(int epicId);
+
+    // Расчёт и обновление времени начала эпика
+    void updateEpicStartTime(int epicId);
+
+    // Расчёт и обновление времени окончания эпика
+    void updateEpicEndTime(int epicId);
+
+    // Расчёт и обновление продолжительности эпика
+    void updateEpicDurationTime(int epicId);
+
+    // Проверка на пересечения
+    void checkIntersections(Task task);
+
+    // Возвращение списка задач, отсортированных по времени
+    List<Task> getPrioritizedTasks();
 }
