@@ -1,19 +1,19 @@
 package tasks;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Epic extends Task {
     private ArrayList<SubTask> subTasks = new ArrayList<>(); // Список id подзадач
+    private LocalDateTime endTime;
 
     // Конструктор для эпика
     public Epic(String taskName, String taskDescription) {
         super(taskName, taskDescription);
         super.setStatus(Status.NEW);
-    }
-
-    // Конструктор для тестов
-    public Epic(String taskName, String taskDescription, int id) {
-        super(taskName, taskDescription, id);
+        super.setDuration(Duration.ZERO);
     }
 
     // Конструктор для FileBackedTaskManager
@@ -21,9 +21,28 @@ public class Epic extends Task {
         super(taskName, taskDescription, status, id);
     }
 
+    // Конструктор для FileBackedTaskManager со временем
+    public Epic(String taskName, String taskDescription, Status status, LocalDateTime startTime, Duration duration,
+                LocalDateTime endTime, int id) {
+        super(taskName, taskDescription, status, startTime, duration, id);
+        this.endTime = endTime;
+    }
+
+    // Конструктор для тестов
+    public Epic(String taskName, String taskDescription, int id) {
+        super(taskName, taskDescription, id);
+    }
+
+    // Получение типа Эпика
     @Override
     public TaskType getType() {
         return TaskType.EPIC;
+    }
+
+    // Переопределение получения времени окончания эпика
+    @Override
+    public LocalDateTime getEndTime() {
+        return endTime;
     }
 
     // Возвращение списка подзадач для эпика
@@ -32,12 +51,14 @@ public class Epic extends Task {
     }
 
     // Возвращение id подзадач для эпика
-    public ArrayList<Integer> getSubTaskIds() {
-        ArrayList<Integer> listIdSubTask = new ArrayList<>();
-        for (int i = 0; i < subTasks.size(); i++) {
-            listIdSubTask.add(subTasks.get(i).getId());
-        }
-        return listIdSubTask;
+    public List<Integer> getSubTaskIds() {
+        List<Integer> listSubTuskId = subTasks.stream().map(Task::getId).toList(); // ?? Тут сомневаюсь не нарушен ли принцип неизменности?
+        return new ArrayList<>(listSubTuskId);
+    }
+
+    // Изменение времени окончания эпика
+    public void setEndTime(LocalDateTime endTime) {
+        this.endTime = endTime;
     }
 
     // Добавление подзадач для эпика в список
@@ -55,12 +76,6 @@ public class Epic extends Task {
         subTasks.clear();
     }
 
-    // Установка статуса эпика
-    @Override
-    public void setStatus(Status status) {
-        super.setStatus(status); //??Не помню зачем переопределил данный метод
-    }
-
     // Вывод на печать наименование эпика, кол-во символов описания и количество подзадач
     @Override
     public String toString() {
@@ -76,6 +91,8 @@ public class Epic extends Task {
             result = result + "подзадачи отсутствуют, ";
         }
         result = result + "статус = " + super.getStatus();
+        result = result + ", начало: " + super.getStartTime();
+        result = result + ", продолжительность: " + super.getDuration();
         result = result + ", id = " + super.getId();
         return result;
     }

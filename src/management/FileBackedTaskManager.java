@@ -5,6 +5,8 @@ import tasks.*;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Map;
 
 public class FileBackedTaskManager extends InMemoryTaskManager {
@@ -12,6 +14,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
 
     public FileBackedTaskManager(File file) {
         this.file = file;
+    }
+
+    public File getFile() {
+        return file;
     }
 
     // Загрузка из файла Таск Менеджера
@@ -40,32 +46,54 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                 } else {
                     subTasks.put(id, (SubTask) task);
                     int epicId = ((SubTask) task).getEpicId();
-                    epics.get(epicId).putEpicSubTasks((SubTask) task); // Кладём Сабтаск в список Эпика. Способ работает,
+                    epics.get(epicId).putEpicSubTasks((SubTask) task); // Кладём Подзадачу в список Эпика. Способ работает,
                     // в случае, если первыми в файле идут Эпики.
                 }
             }
             countId = maxId;
 
         } catch (IOException e) {
-            throw new ManagerSaveException("Ошибка при чтении из файла: " + e.getMessage(), e);
+            throw new ManagerSaveException("Ошибка при чтении из файла: ", e);
         }
     }
 
-    // Формирование задачи из очередной считанной линии из файла
+    // Формирование задачи из очередной считанной линии из файла. Здесь логикой кода предусмотрено, что пользователь
+    // может не ввести временные данные. При чём оба сразу (время начала и продолжительность). Ситуация, что
+    // введено одно из полей данных не предусмотрена.
     private Task fromString(String value) {
-        String[] taskStr = value.split(",", 6); // !! Проверить для чего лимит
+        String[] taskStr = value.split(",", 9); // !! Проверить для чего лимит
         Task task = null;
         TaskType type = TaskType.valueOf(taskStr[1]);
         switch (type) {
             case EPIC:
-                task = new Epic(taskStr[2], taskStr[4], Status.valueOf(taskStr[3]), Integer.parseInt(taskStr[0]));
+                if (taskStr[5].equals("null")) { // Проверка на null по времени начала эпика
+                    task = new Epic(taskStr[2], taskStr[4], Status.valueOf(taskStr[3]), Integer.parseInt(taskStr[0]));
+                    break;
+                } else {
+                    task = new Epic(taskStr[2], taskStr[4], Status.valueOf(taskStr[3]), LocalDateTime.parse(taskStr[5]),
+                            Duration.ofMinutes(Long.parseLong(taskStr[6])), LocalDateTime.parse(taskStr[7]),
+                            Integer.parseInt(taskStr[0]));
+                }
                 break;
             case TASK:
-                task = new Task(taskStr[2], taskStr[4], Status.valueOf(taskStr[3]), Integer.parseInt(taskStr[0]));
+                if (taskStr[5].equals("null")) { // Проверка на null по времени начала задачи
+                    task = new Task(taskStr[2], taskStr[4], Status.valueOf(taskStr[3]), Integer.parseInt(taskStr[0]));
+                    break;
+                } else {
+                    task = new Task(taskStr[2], taskStr[4], Status.valueOf(taskStr[3]), LocalDateTime.parse(taskStr[5]),
+                            Duration.ofMinutes(Long.parseLong(taskStr[6])), Integer.parseInt(taskStr[0]));
+                }
                 break;
             case SUB_TASK:
-                task = new SubTask(taskStr[2], taskStr[4], Status.valueOf(taskStr[3]), Integer.parseInt(taskStr[0]),
-                        Integer.parseInt(taskStr[5]));
+                if (taskStr[5].equals("null")) { // Проверка на null по времени начала подзадачи
+                    task = new SubTask(taskStr[2], taskStr[4], Status.valueOf(taskStr[3]), Integer.parseInt(taskStr[0]),
+                            Integer.parseInt(taskStr[8]));
+                    break;
+                } else {
+                    task = new SubTask(taskStr[2], taskStr[4], Status.valueOf(taskStr[3]), LocalDateTime.parse(taskStr[5]),
+                            Duration.ofMinutes(Long.parseLong(taskStr[6])), Integer.parseInt(taskStr[0]),
+                            Integer.parseInt(taskStr[8]));
+                }
                 break;
         }
         return task;
@@ -75,19 +103,19 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
     private void save() {
         try (FileWriter fw = new FileWriter(file, StandardCharsets.UTF_8);
              BufferedWriter bw = new BufferedWriter(fw)) {
-            bw.write("id,type,name,status,description,epic" + "\n"); // Запись заголовка
+            bw.write("id,type,name,status,description,start,duration,end,epicId" + "\n"); // Запись заголовка
             // Сначала записываем эпики, для корректной работы метода loadFromFile, а именно эпики должны считываться
-            // до сабтасков, чтобы в эпики добавить список сабтасков
+            // до подзадач, чтобы в эпики добавить список подзадач
             for (Map.Entry<Integer, Epic> entry : epics.entrySet()) {
                 bw.append(toString(entry.getValue()));
                 bw.newLine();
             }
-            // Запись тасков
+            // Запись задач
             for (Map.Entry<Integer, Task> entry : tasks.entrySet()) {
                 bw.append(toString(entry.getValue()));
                 bw.newLine();
             }
-            // Запись сабтасков
+            // Запись подзадач
             for (Map.Entry<Integer, SubTask> entry : subTasks.entrySet()) {
                 bw.append(toString(entry.getValue()));
                 bw.newLine();
@@ -102,11 +130,18 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         TaskType type = task.getType();
         if (type.equals(TaskType.SUB_TASK)) {
             String taskStr = (task.getId() + "," + type + "," + task.getTaskName() + "," + task.getStatus() + ","
-                    + task.getTaskDescription() + "," + ((SubTask) task).getEpicId());
+                    + task.getTaskDescription() + "," + task.getStartTime() + ","
+                    + task.getDuration().toMinutes() + "," + "null" + "," + ((SubTask) task).getEpicId());
+            return taskStr;
+        } else if (type.equals(TaskType.TASK)) {
+            String taskStr = (task.getId() + "," + type + "," + task.getTaskName() + "," + task.getStatus() + ","
+                    + task.getTaskDescription() + "," + task.getStartTime() + ","
+                    + task.getDuration().toMinutes() + "," + "null" + "," + "null");
             return taskStr;
         } else {
             String taskStr = (task.getId() + "," + type + "," + task.getTaskName() + "," + task.getStatus() + ","
-                    + task.getTaskDescription() + ",");
+                    + task.getTaskDescription() + "," + task.getStartTime() + ","
+                    + task.getDuration().toMinutes() + "," + task.getEndTime() + "," + "null");
             return taskStr;
         }
     }
@@ -197,7 +232,18 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         super.removeSubTask(id);
         save();
     }
+
+    // Обновление статуса эпика
+    @Override
+    public void updateEpicStatus(int epicId) {
+        super.updateEpicStatus(epicId);
+        save();
+    }
+
+    // Расчёт и обновление времени окончания эпика
+    @Override
+    public void updateEpicTime(int epicId) {
+        super.updateEpicTime(epicId);
+        save();
+    }
 }
-
-
-

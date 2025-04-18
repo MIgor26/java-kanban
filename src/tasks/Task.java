@@ -1,5 +1,7 @@
 package tasks;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class Task {
@@ -7,15 +9,17 @@ public class Task {
     private String taskDescription; // Описание задачи
     private int id; // Идентификатор задачи
     private Status status; // Статус задачи
+    private LocalDateTime startTime; // Время начала задачи
+    private Duration duration = Duration.ZERO; // Продолжительность задачи по умолчанию ноль
 
-    // Конструктор для задачи
+    // Конструктор для Задачи
     public Task(String taskName, String taskDescription, Status status) {
         this.taskName = taskName;
         this.taskDescription = taskDescription;
         this.status = status;
     }
 
-    // Конструктор без изменения статуса
+    // Конструктор для Эпика
     public Task(String taskName, String taskDescription) {
         this.taskName = taskName;
         this.taskDescription = taskDescription;
@@ -29,11 +33,37 @@ public class Task {
         this.id = id;
     }
 
-    // Конструктор новый для тестов эпика
+    // Конструктор со временем начала и продолжительностью
+    public Task(String taskName, String taskDescription, Status status, LocalDateTime startTime, Duration duration) {
+        this.taskName = taskName;
+        this.taskDescription = taskDescription;
+        this.status = status;
+        this.startTime = startTime;
+        this.duration = duration;
+    }
+
+    // Конструктор для FileBackedTaskManager со временем
+    public Task(String taskName, String taskDescription, Status status, LocalDateTime startTime, Duration duration,
+                int id) {
+        this.taskName = taskName;
+        this.taskDescription = taskDescription;
+        this.status = status;
+        this.startTime = startTime;
+        this.duration = duration;
+        this.id = id;
+    }
+
+    // Конструктор для тестов эпика
     public Task(String taskName, String taskDescription, int id) {
         this.taskName = taskName;
         this.taskDescription = taskDescription;
         this.id = id;
+    }
+
+    // Расчёт и получение времени окончания задачи
+    public LocalDateTime getEndTime() {
+        if (startTime == null) return null;
+        return startTime.plus(duration);
     }
 
     // Получение типа задачи
@@ -41,44 +71,52 @@ public class Task {
         return TaskType.TASK;
     }
 
-    // Доступ к имени задачи в других классах
     public String getTaskName() {
         return taskName;
     }
 
-    // Инициализация имени задачи в других классах
     public void setTaskName(String taskName) {
         this.taskName = taskName;
     }
 
-    // Доступ к описанию задачи в других классах
     public String getTaskDescription() {
         return taskDescription;
     }
 
-    // Инициализация описания задачи в других классах
     public void setTaskDescription(String taskDescription) {
         this.taskDescription = taskDescription;
     }
 
-    // Доступ к id в других классах
     public int getId() {
         return id;
     }
 
-    // Инициализация id в других классах
     public void setId(int id) {
         this.id = id;
     }
 
-    // Доступ к статусу в других классах
     public Status getStatus() {
         return status;
     }
 
-    // Инициализация статуса в других классах
     public void setStatus(Status status) {
         this.status = status;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public Duration getDuration() {
+        return duration;
+    }
+
+    public void setDuration(Duration duration) {
+        this.duration = duration;
     }
 
     @Override
@@ -91,11 +129,9 @@ public class Task {
 
     @Override
     public int hashCode() {
-        int hash = id;
-        return hash;
+        return id;
     }
 
-    // Вывод на печать наименование задачи и кол-во символов описания
     @Override
     public String toString() {
         String result = "\"" + taskName + "\", ";
@@ -105,6 +141,8 @@ public class Task {
             result = result + "Описание отсутствует, ";
         }
         result = result + "статус = " + status;
+        result = result + ", начало: " + startTime;
+        result = result + ", продолжительность: " + duration;
         result = result + ", id = " + id + ". ";
         return result;
     }
