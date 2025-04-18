@@ -67,7 +67,7 @@ public class Main {
         System.out.println("Список задач: " + fbm.getTasks());
         System.out.println("Список эпиков: " + fbm.getEpics());
         System.out.println("Список подзадач: " + fbm.getSubTasks());
-        System.out.println("Список по приоритетам ");
+        System.out.println("\n Список по приоритетам: ");
         for (Task task : fbm.getPrioritizedTasks()) {
             System.out.println(task);
         }
@@ -79,7 +79,10 @@ public class Main {
         System.out.println("Список задач: " + fbm1.getTasks());
         System.out.println("Список эпиков: " + fbm1.getEpics());
         System.out.println("Список подзадач: " + fbm1.getSubTasks());
-        System.out.println("Список по приоритетам ");
+        // Удаление задачи 1 и эпика 1
+        fbm.removeTask(taskId1);
+        fbm.removeEpic(epicId1);
+        System.out.println("\n Список по приоритетам после удаления 1 задачи и 1 эпика: ");
         for (Task task : fbm.getPrioritizedTasks()) {
             System.out.println(task);
         }

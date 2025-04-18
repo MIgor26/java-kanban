@@ -1,14 +1,10 @@
 package management;
 
 import exception.ValidateException;
-import tasks.Epic;
-import tasks.Status;
-import tasks.SubTask;
-import tasks.Task;
+import tasks.*;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
 
 public class InMemoryTaskManager implements TaskManager {
@@ -116,7 +112,6 @@ public class InMemoryTaskManager implements TaskManager {
             try {
                 checkIntersections(newTask); // Проверка на пересечения
             } catch (ValidateException e) {
-                System.out.println(e.getMessage());
                 return -1; // Что-то нужно вернуть...
             }
             prioritizedTasks.add(newTask);
@@ -152,12 +147,8 @@ public class InMemoryTaskManager implements TaskManager {
         newSubTask.setId(countId);
         subTasks.put(countId, newSubTask);
         epics.get(newSubTask.getEpicId()).putEpicSubTasks(newSubTask); // Добавление подзадачи в список эпика
-        // ?? Здесь и далее в 2 местах вызываются комплексом 4 метода. Правильно ли объединить 4 метода в блок
-        // и сделать это одним методом?
         updateEpicStatus(newSubTask.getEpicId()); // Обновление статуса эпика к которому относится подзадача
-        updateEpicStartTime(newSubTask.getEpicId()); // Обновление времени начала эпика
-        updateEpicEndTime(newSubTask.getEpicId()); // Обновление времени окончания эпика
-        updateEpicDurationTime(newSubTask.getEpicId()); // Обновление продолжительности эпика
+        updateEpicTime(newSubTask.getEpicId()); // Обновление временных показателей эпика
         return countId;
     }
 
@@ -198,17 +189,13 @@ public class InMemoryTaskManager implements TaskManager {
         }
         subTasks.put(updSubTask.getId(), updSubTask);
         updateEpicStatus(updSubTask.getEpicId()); // Обновление статуса эпика к которому относится подзадача
-        updateEpicStartTime(updSubTask.getEpicId()); // Обновление времени начала эпика
-        updateEpicEndTime(updSubTask.getEpicId()); // Обновление времени окончания эпика
-        updateEpicDurationTime(updSubTask.getEpicId()); // Обновление продолжительности эпика
+        updateEpicTime(updSubTask.getEpicId()); // Обновление временных показателей эпика
     }
 
     // Удаление задачи по id
     @Override
     public void removeTask(int id) {
-        if (tasks.get(id).getStartTime() != null) {
-            prioritizedTasks.remove(tasks.get(id));
-        }
+        prioritizedTasks.remove(tasks.get(id));
         historyManager.remove(id);
         tasks.remove(id);
     }
@@ -221,6 +208,15 @@ public class InMemoryTaskManager implements TaskManager {
         for (Integer subtaskId : epic.getSubTaskIds()) {
             historyManager.remove(subtaskId); // Удаление Подзадач из истории при удалении Эпика
             subTasks.remove(subtaskId);
+            for (Task task : getPrioritizedTasks()) {
+                TaskType type = task.getType();
+                if (type == TaskType.SUB_TASK) {
+                    SubTask subTask = (SubTask) task;
+                    if (subTask.getEpicId() == id) {
+                        prioritizedTasks.remove(subTask);
+                    }
+                }
+            }
         }
     }
 
@@ -235,9 +231,7 @@ public class InMemoryTaskManager implements TaskManager {
         subTasks.remove(id);
         epics.get(epicId).removeEpicSubTask(id); // Удаление подзадачи в поле эпика
         updateEpicStatus(epicId); // Обновление статуса эпика к которому относится подзадача
-        updateEpicStartTime(epicId); // Обновление времени начала эпика
-        updateEpicEndTime(epicId); // Обновление времени окончания эпика
-        updateEpicDurationTime(epicId); // Обновление продолжительности эпика
+        updateEpicTime(epicId); // Обновление временных показателей эпика
     }
 
     // Получение подзадач для заданного по id эпика
@@ -275,61 +269,33 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-    // Расчёт и обновление времени начала эпика
+    // Расчёт и обновление времени начала, окончания и продолжительности эпика
     @Override
-    public void updateEpicStartTime(int epicId) {
+    public void updateEpicTime(int epicId) {
         if (getEpicSubTasks(epicId).isEmpty()) {
-            epics.get(epicId).setEndTime(null); // Подзадач нет или удалены -> время начала эпика null
+            epics.get(epicId).setStartTime(null); // Подзадач нет или удалены -> время начала эпика null
+            epics.get(epicId).setEndTime(null); // -> время окончания эпика null
+            epics.get(epicId).setDuration(Duration.ZERO); // -> время продолжительности эпика ноль
             return;
         }
-        // Определение времени начала самой ранней подзадачи
-        Optional<SubTask> earliestTime = getEpicSubTasks(epicId).stream()
-                .filter(subTask -> (subTask.getStartTime() != null))
-                .min((o1, o2) -> (int) (o1.getStartTime().toEpochSecond(ZoneOffset.UTC)
-                        - o2.getStartTime().toEpochSecond(ZoneOffset.UTC)));
-        if (earliestTime.isEmpty()) {
-            epics.get(epicId).setEndTime(null); // Время начала в подзадачах нет или только что была удалена
-            // подзадача, содержащая время -> время начала эпика null
-            return;
+        LocalDateTime startTime = LocalDateTime.MAX;
+        LocalDateTime endTime = LocalDateTime.MIN;
+        Duration duration = Duration.ZERO;
+        for (SubTask subTask : getEpicSubTasks(epicId)) {
+            duration = duration.plus(subTask.getDuration()); // Можно без проверок на null, так как по умолчанию
+            // продолжительность у всех задач ZERO
+            if (subTask.getStartTime() != null && subTask.getStartTime().isBefore(startTime)) {
+                startTime = subTask.getStartTime();
+            }
+            if (subTask.getEndTime() != null && subTask.getEndTime().isAfter(endTime)) {
+                endTime = subTask.getEndTime();
+            }
         }
-        epics.get(epicId).setStartTime(earliestTime.get().getStartTime());
-    }
-
-    // Расчёт и обновление времени окончания эпика
-    @Override
-    public void updateEpicEndTime(int epicId) {
-        if (getEpicSubTasks(epicId).isEmpty()) {
-            epics.get(epicId).setEndTime(null); // Подзадач нет или удалены -> время окончания эпика null
-            return;
-        }
-        // Определение времени окончания самой поздней подзадачи
-        Optional<SubTask> latestTime = getEpicSubTasks(epicId).stream()
-                .filter(subTask -> (subTask.getStartTime() != null))
-                .max((o1, o2) -> (int) (o1.getEndTime().toEpochSecond(ZoneOffset.UTC)
-                        - o2.getEndTime().toEpochSecond(ZoneOffset.UTC)));
-        if (latestTime.isEmpty()) {
-            epics.get(epicId).setEndTime(null); // Время окончания в подзадачах нет или только что была удалена
-            // подзадача, содержащая время -> время окончания эпика null
-            return;
-        }
-        epics.get(epicId).setEndTime(latestTime.get().getEndTime());
-    }
-
-    // Расчёт и обновление продолжительности эпика
-    @Override
-    public void updateEpicDurationTime(int epicId) {
-        if (getEpicSubTasks(epicId).isEmpty()) {
-            epics.get(epicId).setDuration(Duration.ZERO); // Подзадач нет или удалены -> продолжительность эпика ноль
-            return;
-        }
-        LocalDateTime startTimeEpic = epics.get(epicId).getStartTime();
-        LocalDateTime endTimeEpic = epics.get(epicId).getEndTime();
-        if (startTimeEpic == null || endTimeEpic == null) {
-            epics.get(epicId).setDuration(Duration.ZERO); // Времени начала и окончания у эпика нет -> продолжительность эпика ноль
-            return;
-        }
-        Duration durationEpic = Duration.between(startTimeEpic, endTimeEpic);
-        epics.get(epicId).setDuration(durationEpic);
+        if (startTime == LocalDateTime.MAX) startTime = null; // Если не задано время начала у подзадач
+        if (endTime == LocalDateTime.MIN) endTime = null; // Если не задано время окончания у подзадач
+        epics.get(epicId).setStartTime(startTime);
+        epics.get(epicId).setEndTime(endTime);
+        epics.get(epicId).setDuration(duration);
     }
 
     // Проверка на пересечения

@@ -73,13 +73,7 @@ public interface TaskManager {
     void updateEpicStatus(int epicId);
 
     // Расчёт и обновление времени начала эпика
-    void updateEpicStartTime(int epicId);
-
-    // Расчёт и обновление времени окончания эпика
-    void updateEpicEndTime(int epicId);
-
-    // Расчёт и обновление продолжительности эпика
-    void updateEpicDurationTime(int epicId);
+    void updateEpicTime(int epicId);
 
     // Проверка на пересечения
     void checkIntersections(Task task);

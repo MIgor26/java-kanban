@@ -11,3 +11,64 @@
 
 4. В FileBackedTaskManager разобраться для чего указан лимит в методе Task fromString(String value)
         String[] taskStr = value.split(",", 9); Лимит 9
+
+Старый код.
+
+// Расчёт и обновление времени начала эпика
+    @Override
+    public void updateEpicStartTime(int epicId) {
+        if (getEpicSubTasks(epicId).isEmpty()) {
+            epics.get(epicId).setEndTime(null); // Подзадач нет или удалены -> время начала эпика null
+            return;
+        }
+        // Определение времени начала самой ранней подзадачи
+        Optional<SubTask> earliestTime = getEpicSubTasks(epicId).stream()
+                .filter(subTask -> (subTask.getStartTime() != null))
+                .min((o1, o2) -> (int) (o1.getStartTime().toEpochSecond(ZoneOffset.UTC)
+                        - o2.getStartTime().toEpochSecond(ZoneOffset.UTC)));
+        if (earliestTime.isEmpty()) {
+            epics.get(epicId).setEndTime(null); // Время начала в подзадачах нет или только что была удалена
+            // подзадача, содержащая время -> время начала эпика null
+            return;
+        }
+        epics.get(epicId).setStartTime(earliestTime.get().getStartTime());
+    }
+
+    // Расчёт и обновление времени окончания эпика
+    @Override
+    public void updateEpicEndTime(int epicId) {
+        if (getEpicSubTasks(epicId).isEmpty()) {
+            epics.get(epicId).setEndTime(null); // Подзадач нет или удалены -> время окончания эпика null
+            return;
+        }
+        // Определение времени окончания самой поздней подзадачи
+        Optional<SubTask> latestTime = getEpicSubTasks(epicId).stream()
+                .filter(subTask -> (subTask.getStartTime() != null))
+                .max((o1, o2) -> (int) (o1.getEndTime().toEpochSecond(ZoneOffset.UTC)
+                        - o2.getEndTime().toEpochSecond(ZoneOffset.UTC)));
+        if (latestTime.isEmpty()) {
+            epics.get(epicId).setEndTime(null); // Время окончания в подзадачах нет или только что была удалена
+            // подзадача, содержащая время -> время окончания эпика null
+            return;
+        }
+        epics.get(epicId).setEndTime(latestTime.get().getEndTime());
+    }
+
+    // Расчёт и обновление продолжительности эпика
+    @Override
+    public void updateEpicDurationTime(int epicId) {
+        if (getEpicSubTasks(epicId).isEmpty()) {
+            epics.get(epicId).setDuration(Duration.ZERO); // Подзадач нет или удалены -> продолжительность эпика ноль
+            return;
+        }
+
+
+        LocalDateTime startTimeEpic = epics.get(epicId).getStartTime();
+        LocalDateTime endTimeEpic = epics.get(epicId).getEndTime();
+        if (startTimeEpic == null || endTimeEpic == null) {
+            epics.get(epicId).setDuration(Duration.ZERO); // Времени начала и окончания у эпика нет -> продолжительность эпика ноль
+            return;
+        }
+        Duration durationEpic = Duration.between(startTimeEpic, endTimeEpic);
+        epics.get(epicId).setDuration(durationEpic);
+    }

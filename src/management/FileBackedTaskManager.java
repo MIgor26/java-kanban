@@ -240,24 +240,10 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
         save();
     }
 
-    // Расчёт и обновление времени начала эпика
-    @Override
-    public void updateEpicStartTime(int epicId) {
-        super.updateEpicStartTime(epicId);
-        save();
-    }
-
     // Расчёт и обновление времени окончания эпика
     @Override
-    public void updateEpicEndTime(int epicId) {
-        super.updateEpicEndTime(epicId);
-        save();
-    }
-
-    // Расчёт и обновление продолжительности эпика
-    @Override
-    public void updateEpicDurationTime(int epicId) {
-        super.updateEpicDurationTime(epicId);
+    public void updateEpicTime(int epicId) {
+        super.updateEpicTime(epicId);
         save();
     }
 }
