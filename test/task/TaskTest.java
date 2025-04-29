@@ -1,6 +1,7 @@
 package task;
 
 import management.InMemoryTaskManager;
+import management.Managers;
 import management.TaskManager;
 import org.junit.jupiter.api.Test;
 import tasks.Epic;
@@ -43,7 +44,7 @@ public class TaskTest {
         SubTask subTask11 = new SubTask("SubTask #11", "", Status.NEW, 1);
         SubTask subTask12 = new SubTask("SubTask #12", "", Status.NEW, 1);
         Epic epic1 = new Epic("Epic #1", "Epic #1 description");
-        TaskManager manager = new InMemoryTaskManager();
+        TaskManager manager = Managers.getDefault();
         int idEpic1 = manager.addEpic(epic1);
         int idSubTask11 = manager.addSubTask(subTask11);
         int idSubTask12 = manager.addSubTask(subTask12);
@@ -58,7 +59,7 @@ public class TaskTest {
         SubTask subTask11 = new SubTask("SubTask #11", "", Status.DONE, 1);
         SubTask subTask12 = new SubTask("SubTask #12", "", Status.DONE, 1);
         Epic epic1 = new Epic("Epic #1", "Epic #1 description");
-        TaskManager manager = new InMemoryTaskManager();
+        TaskManager manager = Managers.getDefault();
         int idEpic1 = manager.addEpic(epic1);
         int idSubTask11 = manager.addSubTask(subTask11);
         int idSubTask12 = manager.addSubTask(subTask12);
@@ -73,7 +74,7 @@ public class TaskTest {
         SubTask subTask11 = new SubTask("SubTask #11", "", Status.DONE, 1);
         SubTask subTask12 = new SubTask("SubTask #12", "", Status.NEW, 1);
         Epic epic1 = new Epic("Epic #1", "Epic #1 description");
-        TaskManager manager = new InMemoryTaskManager();
+        TaskManager manager = Managers.getDefault();
         int idEpic1 = manager.addEpic(epic1);
         int idSubTask11 = manager.addSubTask(subTask11);
         int idSubTask12 = manager.addSubTask(subTask12);
