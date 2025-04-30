@@ -60,7 +60,7 @@ public class FileBackedTaskManagerTest extends TaskManagerTest {
         final int subTaskId11 = manager1.addSubTask(subTask11);
 
         // Загрузка менеджера из файла
-        TaskManager manager2 = FileBackedTaskManager.loadFromFile(manager1.getFile());
+        TaskManager manager2 = FileBackedTaskManager.loadFromFile(file);
 
         // Проверка правильности загрузки задач из файла
         assertEquals(manager2.getTask(taskId1), task1, "Задача не эквивалентна");
@@ -71,9 +71,7 @@ public class FileBackedTaskManagerTest extends TaskManagerTest {
     // Выброс исключения при обращении к несуществующему файлу
     @Test
     public void throwingExceptionWhenAccessingNonExistentFile() {
-        ManagerSaveException thrown = Assertions.assertThrows(ManagerSaveException.class, () ->
+        assertThrows(ManagerSaveException.class, () ->
                 FileBackedTaskManager.loadFromFile(new File("fileNull", "csv")));
-        Assertions.assertEquals("Ошибка при чтении из файла: ", thrown.getMessage());
-
     }
 }

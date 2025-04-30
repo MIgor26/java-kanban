@@ -1,5 +1,6 @@
 package management;
 
+import exception.ValidateException;
 import org.junit.jupiter.api.Test;
 import tasks.Epic;
 import tasks.Status;
@@ -83,18 +84,17 @@ public abstract class TaskManagerTest<T extends TaskManager> {
     }
 
     @Test
-    public void correctCalculatOfIntervalIntersection() { //Корректный расчёт пересечения интервалов
+    public void correctCalculatOfIntervalIntersection() throws ValidateException { //Корректный расчёт пересечения интервалов
         // Подготовка
         Task task1 = new Task("Task #1", "Task #1 description", Status.NEW,
                 LocalDateTime.now(), Duration.ofMinutes(60));
         Task task2 = new Task("Task #2", "Task #2 description", Status.NEW,
-                LocalDateTime.now().plusMinutes(10), Duration.ofMinutes(60));
+                LocalDateTime.now(), Duration.ofMinutes(60));
         final int taskid1 = manager.addTask(task1);
-        final int taskid2 = manager.addTask(task2);
 
-        //Проверка
-        assertFalse(manager.getTasks().contains(task2), "Расчёт пересечения работает некорректно");
+        // Проверяем, что метод выбрасывает исключение ValidateException
+        assertThrows(ValidateException.class, () -> {
+            manager.addTask(task2);
+        }, "Метод на пересечение задач работает не корректно.");
     }
-
-
 }

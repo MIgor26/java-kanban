@@ -43,9 +43,15 @@ public class FileBackedTaskManager extends InMemoryTaskManager {
                     epics.put(id, (Epic) task);
                 } else if (task.getType() == TaskType.TASK) {
                     tasks.put(id, task);
+                    if (task.getStartTime() != null) {
+                        prioritizedTasks.add(task); // !!
+                    }
                 } else {
                     subTasks.put(id, (SubTask) task);
                     int epicId = ((SubTask) task).getEpicId();
+                    if (task.getStartTime() != null) {
+                        prioritizedTasks.add((SubTask) task); // !!
+                    }
                     epics.get(epicId).putEpicSubTasks((SubTask) task); // Кладём Подзадачу в список Эпика. Способ работает,
                     // в случае, если первыми в файле идут Эпики.
                 }

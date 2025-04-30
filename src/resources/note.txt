@@ -1,9 +1,3 @@
-1. Быть может этот блок кода (он повторяется 3 раза в InMemoryTaskManager) стоит собрать в один метод
-    updateEpicStatus(epicId); // Обновление статуса эпика к которому относится подзадача
-    updateEpicStartTime(epicId); // Обновление времени начала эпика
-    updateEpicEndTime(epicId); // Обновление времени окончания эпика
-    updateEpicDurationTime(epicId); // Обновление продолжительности эпика
-
 2. Описание toString в задачах сделать более читаемым, отформатировав дату и продолжительность и добавив проверки на null
 
 3. В InMemoryHistoryManager в методе void removeNode(Node node) разобраться почему не нужна данная строка:
@@ -12,63 +6,28 @@
 4. В FileBackedTaskManager разобраться для чего указан лимит в методе Task fromString(String value)
         String[] taskStr = value.split(",", 9); Лимит 9
 
-Старый код.
+5. В классе Managers предусмотреть создание менеджеров InMemoryTaskManager и FileBackedTaskManager сразу с HistoryManager
 
-// Расчёт и обновление времени начала эпика
-    @Override
-    public void updateEpicStartTime(int epicId) {
-        if (getEpicSubTasks(epicId).isEmpty()) {
-            epics.get(epicId).setEndTime(null); // Подзадач нет или удалены -> время начала эпика null
-            return;
-        }
-        // Определение времени начала самой ранней подзадачи
-        Optional<SubTask> earliestTime = getEpicSubTasks(epicId).stream()
-                .filter(subTask -> (subTask.getStartTime() != null))
-                .min((o1, o2) -> (int) (o1.getStartTime().toEpochSecond(ZoneOffset.UTC)
-                        - o2.getStartTime().toEpochSecond(ZoneOffset.UTC)));
-        if (earliestTime.isEmpty()) {
-            epics.get(epicId).setEndTime(null); // Время начала в подзадачах нет или только что была удалена
-            // подзадача, содержащая время -> время начала эпика null
-            return;
-        }
-        epics.get(epicId).setStartTime(earliestTime.get().getStartTime());
-    }
+6. Понять как работает TreeSet вообще и в моём коде.В частности почему время старта является чем-то типа ключа.
 
-    // Расчёт и обновление времени окончания эпика
-    @Override
-    public void updateEpicEndTime(int epicId) {
-        if (getEpicSubTasks(epicId).isEmpty()) {
-            epics.get(epicId).setEndTime(null); // Подзадач нет или удалены -> время окончания эпика null
-            return;
-        }
-        // Определение времени окончания самой поздней подзадачи
-        Optional<SubTask> latestTime = getEpicSubTasks(epicId).stream()
-                .filter(subTask -> (subTask.getStartTime() != null))
-                .max((o1, o2) -> (int) (o1.getEndTime().toEpochSecond(ZoneOffset.UTC)
-                        - o2.getEndTime().toEpochSecond(ZoneOffset.UTC)));
-        if (latestTime.isEmpty()) {
-            epics.get(epicId).setEndTime(null); // Время окончания в подзадачах нет или только что была удалена
-            // подзадача, содержащая время -> время окончания эпика null
-            return;
-        }
-        epics.get(epicId).setEndTime(latestTime.get().getEndTime());
-    }
+7. В Хэндрере предусмотреть исключение
+ } catch (Exception e) { // Данный блок не по ТЗ. Код ошибки «не реализовано». Для отладки кода и отлова прочих исключений
+            ErrorResponse response = new ErrorResponse(e.getMessage(), 501, exchange.getRequestURI().getPath());
+            String jsonText = json.toJson(response);
+            sendText(exchange, jsonText, 501);
+ }
 
-    // Расчёт и обновление продолжительности эпика
-    @Override
-    public void updateEpicDurationTime(int epicId) {
-        if (getEpicSubTasks(epicId).isEmpty()) {
-            epics.get(epicId).setDuration(Duration.ZERO); // Подзадач нет или удалены -> продолжительность эпика ноль
-            return;
-        }
-
-
-        LocalDateTime startTimeEpic = epics.get(epicId).getStartTime();
-        LocalDateTime endTimeEpic = epics.get(epicId).getEndTime();
-        if (startTimeEpic == null || endTimeEpic == null) {
-            epics.get(epicId).setDuration(Duration.ZERO); // Времени начала и окончания у эпика нет -> продолжительность эпика ноль
-            return;
-        }
-        Duration durationEpic = Duration.between(startTimeEpic, endTimeEpic);
-        epics.get(epicId).setDuration(durationEpic);
-    }
+ Для теста в Main
+ // Тест начало
+         LocalDateTime start1 = LocalDateTime.now();
+         LocalDateTime start2 = start1.plusHours(1);
+         LocalDateTime start3 = start2.plusHours(1);
+         LocalDateTime start4 = start3.plusHours(1);
+         Duration duration = Duration.ofMinutes(30);
+         manager.addTask(new Task("Task", "1", Status.NEW, start1, duration));
+         int idEp1 = manager.addEpic(new Epic("Epic1", "1"));
+         int idEp2 = manager.addEpic(new Epic("Epic2", "1"));
+         manager.addSubTask(new SubTask("SubTask", "11", Status.NEW, idEp1, start2, duration));
+         manager.addSubTask(new SubTask("SubTask", "12", Status.IN_PROGRESS, idEp1, start3, duration));
+         manager.addSubTask(new SubTask("SubTask", "21", Status.DONE, idEp2, start4, duration));
+         // Тест окончание

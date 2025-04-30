@@ -1,5 +1,6 @@
 package management;
 
+import exception.TaskNotFoundException;
 import exception.ValidateException;
 import tasks.*;
 
@@ -43,6 +44,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void clearTask() {
         for (Task task : tasks.values()) { // Удаление всех задач из истории просмотра
             historyManager.remove(task.getId());
+            prioritizedTasks.remove(task);
         }
         tasks.clear();
     }
@@ -56,6 +58,7 @@ public class InMemoryTaskManager implements TaskManager {
         epics.clear();
         for (SubTask subTask : subTasks.values()) { // Удаление всех подзадач из истории просмотра
             historyManager.remove(subTask.getId());
+            prioritizedTasks.remove(subTask); // Удаление всех подзадач из приоритетного списка
         }
         subTasks.clear(); // Также удаляются все подзадачи
     }
@@ -81,39 +84,41 @@ public class InMemoryTaskManager implements TaskManager {
     // Получение по id задачи
     @Override
     public Task getTask(int id) {
-        if (tasks.get(id) != null) {
-            historyManager.add(tasks.get(id));
+        if (tasks.get(id) == null) {
+            String errorMessage = String.format("Задача с id %d не найдена.", id);
+            throw new TaskNotFoundException(errorMessage);
         }
+        historyManager.add(tasks.get(id));
         return tasks.get(id);
     }
 
     // Получение по id эпика
     @Override
     public Epic getEpic(int id) {
-        if (epics.get(id) != null) {
-            historyManager.add(epics.get(id));
+        if (epics.get(id) == null) {
+            String errorMessage = String.format("Эпик с id %d не найден.", id);
+            throw new TaskNotFoundException(errorMessage);
         }
+        historyManager.add(epics.get(id));
         return epics.get(id);
     }
 
     // Получение по id подзадачи
     @Override
     public SubTask getSubTask(int id) {
-        if (subTasks.get(id) != null) {
-            historyManager.add(subTasks.get(id));
+        if (subTasks.get(id) == null) {
+            String errorMessage = String.format("Подзадача с id %d не найдена.", id);
+            throw new TaskNotFoundException(errorMessage);
         }
+        historyManager.add(subTasks.get(id));
         return subTasks.get(id);
     }
 
     // Создание новой задачи
     @Override
-    public int addTask(Task newTask) {
+    public int addTask(Task newTask) throws ValidateException {
         if (newTask.getStartTime() != null) { // Если время задано, то проверяем пересечения
-            try {
-                checkIntersections(newTask); // Проверка на пересечения
-            } catch (ValidateException e) {
-                return -1; // Что-то нужно вернуть...
-            }
+            checkIntersections(newTask); // Проверка на пересечения
             prioritizedTasks.add(newTask);
         }
         countId++;
@@ -133,14 +138,9 @@ public class InMemoryTaskManager implements TaskManager {
 
     // Создание новой подзадачи
     @Override
-    public int addSubTask(SubTask newSubTask) {
+    public int addSubTask(SubTask newSubTask) throws ValidateException {
         if (newSubTask.getStartTime() != null) { // Если время задано, то проверяем пересечения
-            try {
-                checkIntersections(newSubTask); // Проверка на пересечения
-            } catch (ValidateException e) {
-                System.out.println(e.getMessage());
-                return -1; // Что-то нужно вернуть...
-            }
+            checkIntersections(newSubTask); // Проверка на пересечения
             prioritizedTasks.add(newSubTask);
         }
         countId++;
@@ -154,13 +154,9 @@ public class InMemoryTaskManager implements TaskManager {
 
     // Обновление задачи
     @Override
-    public void updateTask(Task updTask) {
+    public void updateTask(Task updTask) throws ValidateException {
         if (updTask.getStartTime() != null) { // Если время задано, то проверяем пересечения
-            try {
-                checkIntersections(updTask); // Проверка на пересечения
-            } catch (ValidateException e) {
-                System.out.println(e.getMessage());
-            }
+            checkIntersections(updTask); // Проверка на пересечения
             Task task = tasks.get(updTask.getId());
             prioritizedTasks.remove(task);
             prioritizedTasks.add(updTask);
@@ -176,13 +172,9 @@ public class InMemoryTaskManager implements TaskManager {
 
     // Обновление подзадачи
     @Override
-    public void updateSubTask(SubTask updSubTask) {
+    public void updateSubTask(SubTask updSubTask) throws ValidateException {
         if (updSubTask.getStartTime() != null) { // Если время задано, то проверяем пересечения
-            try {
-                checkIntersections(updSubTask); // Проверка на пересечения
-            } catch (ValidateException e) {
-                System.out.println(e.getMessage());
-            }
+            checkIntersections(updSubTask); // Проверка на пересечения
             SubTask subTask = subTasks.get(updSubTask.getId());
             prioritizedTasks.remove(subTask);
             prioritizedTasks.add(updSubTask);
