@@ -9,3 +9,10 @@
 5. В классе Managers предусмотреть создание менеджеров InMemoryTaskManager и FileBackedTaskManager сразу с HistoryManager
 
 6. Понять как работает TreeSet вообще и в моём коде.В частности почему время старта является чем-то типа ключа.
+
+7. В Хэндрере предусмотреть исключение
+ } catch (Exception e) { // Данный блок не по ТЗ. Код ошибки придуман. Для отладки кода и отлова прочих исключений
+            ErrorResponse response = new ErrorResponse(e.getMessage(), 501, exchange.getRequestURI().getPath());
+            String jsonText = json.toJson(response);
+            sendText(exchange, jsonText, 501);
+        }

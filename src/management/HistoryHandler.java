@@ -1,20 +1,24 @@
 package management;
 
-import com.google.gson.Gson;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import tasks.Task;
 
 import java.io.IOException;
 import java.util.List;
 
-public class HistoryHandler extends BaseHttpHandler implements HttpHandler {
+public class HistoryHandler extends BaseHttpHandler {
     private TaskManager taskManager;
-    private Gson json;
 
-    public HistoryHandler(TaskManager taskManager, Gson json) {
+    public HistoryHandler(TaskManager taskManager) {
+        super();
         this.taskManager = taskManager;
-        this.json = json;
+    }
+
+    void handleGet(HttpExchange exchange) throws IOException {
+        List<Task> history = taskManager.getHistoryManager();
+        String historyJson = json.toJson(history);
+        sendText(exchange, historyJson, 200);
+
     }
 
     @Override

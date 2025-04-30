@@ -9,3 +9,25 @@
 5. В классе Managers предусмотреть создание менеджеров InMemoryTaskManager и FileBackedTaskManager сразу с HistoryManager
 
 6. Понять как работает TreeSet вообще и в моём коде.В частности почему время старта является чем-то типа ключа.
+
+7. В Хэндрере предусмотреть исключение
+ } catch (Exception e) { // Данный блок не по ТЗ. Код ошибки «не реализовано». Для отладки кода и отлова прочих исключений
+            ErrorResponse response = new ErrorResponse(e.getMessage(), 501, exchange.getRequestURI().getPath());
+            String jsonText = json.toJson(response);
+            sendText(exchange, jsonText, 501);
+ }
+
+ Для теста в Main
+ // Тест начало
+         LocalDateTime start1 = LocalDateTime.now();
+         LocalDateTime start2 = start1.plusHours(1);
+         LocalDateTime start3 = start2.plusHours(1);
+         LocalDateTime start4 = start3.plusHours(1);
+         Duration duration = Duration.ofMinutes(30);
+         manager.addTask(new Task("Task", "1", Status.NEW, start1, duration));
+         int idEp1 = manager.addEpic(new Epic("Epic1", "1"));
+         int idEp2 = manager.addEpic(new Epic("Epic2", "1"));
+         manager.addSubTask(new SubTask("SubTask", "11", Status.NEW, idEp1, start2, duration));
+         manager.addSubTask(new SubTask("SubTask", "12", Status.IN_PROGRESS, idEp1, start3, duration));
+         manager.addSubTask(new SubTask("SubTask", "21", Status.DONE, idEp2, start4, duration));
+         // Тест окончание

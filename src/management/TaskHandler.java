@@ -1,14 +1,8 @@
 package management;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import exception.ErrorResponse;
-import exception.ManagerSaveException;
-import exception.TaskNotFoundException;
-import exception.ValidateException;
 import tasks.Status;
 import tasks.Task;
 
@@ -20,51 +14,16 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-public class TaskHandler extends BaseHttpHandler implements HttpHandler {
+public class TaskHandler extends BaseHttpHandler {
     private TaskManager taskManager;
-    private Gson json;
 
-    public TaskHandler(TaskManager taskManager, Gson json) {
+    public TaskHandler(TaskManager taskManager) {
+        super();
         this.taskManager = taskManager;
-        this.json = json;
     }
 
     @Override
-    public void handle(HttpExchange exchange) throws IOException {
-        String method = exchange.getRequestMethod();
-
-        try {
-            switch (method) {
-                case "GET":
-                    handleGet(exchange);
-                    break;
-                case "POST":
-                    handlePost(exchange);
-                    break;
-                case "DELETE":
-                    handleDelete(exchange);
-                    break;
-                default:
-                    break;
-            }
-        } catch (TaskNotFoundException e) {
-            ErrorResponse response = new ErrorResponse(e.getMessage(), 404, exchange.getRequestURI().getPath());
-            String jsonText = json.toJson(response);
-            sendText(exchange, jsonText, 404);
-        } catch (ValidateException e) {
-            ErrorResponse response = new ErrorResponse(e.getMessage(), 406, exchange.getRequestURI().getPath());
-            String jsonText = json.toJson(response);
-            sendText(exchange, jsonText, 406);
-        } catch (ManagerSaveException e) {
-            ErrorResponse response = new ErrorResponse(e.getMessage(), 500, exchange.getRequestURI().getPath());
-            String jsonText = json.toJson(response);
-            sendText(exchange, jsonText, 500);
-        } finally {
-            exchange.close();
-        }
-    }
-
-    private void handleGet(HttpExchange exchange) throws IOException {
+    void handleGet(HttpExchange exchange) throws IOException {
         URI request = exchange.getRequestURI();
         String path = request.getPath();
         String[] urlPath = path.split("/");
@@ -83,7 +42,8 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
         }
     }
 
-    private void handleDelete(HttpExchange exchange) throws IOException {
+    @Override
+    void handleDelete(HttpExchange exchange) throws IOException {
         URI request = exchange.getRequestURI();
         String path = request.getPath();
         String[] urlPath = path.split("/");
@@ -92,7 +52,8 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
         sendText(exchange, "Задача по id " + taskId + " удалена.", 200);
     }
 
-    private void handlePost(HttpExchange exchange) throws IOException {
+    @Override
+    void handlePost(HttpExchange exchange) throws IOException {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd.HH:mm:ss");
         String body = new String(exchange.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
         JsonObject jsonObject = JsonParser.parseString(body).getAsJsonObject();
@@ -100,16 +61,15 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
         String taskName = jsonObject.get("taskName").getAsString();
         String taskDescription = jsonObject.get("taskDescription").getAsString();
         String status = jsonObject.get("status").getAsString();
+        System.out.println("status = " + status);
         // Временные поля могут быть не заданы - проверяем это
-        String startTimeStr = jsonObject.get("startTime").getAsString();
         LocalDateTime startTime = null;
         if (jsonObject.has("startTime")) {
-            startTime = LocalDateTime.parse(startTimeStr, dtf);
+            startTime = LocalDateTime.parse(jsonObject.get("startTime").getAsString(), dtf);
         }
-        int durationMin = jsonObject.get("duration").getAsInt();
         Duration duration = Duration.ZERO;
         if (jsonObject.has("duration")) {
-            duration = Duration.ofMinutes(durationMin);
+            duration = Duration.ofMinutes(jsonObject.get("duration").getAsInt());
         }
         // Если id присутствует - считаем, что это обновление задачи
         if (jsonObject.has("id")) {
@@ -120,6 +80,7 @@ public class TaskHandler extends BaseHttpHandler implements HttpHandler {
 
         } else {
             Task task = new Task(taskName, taskDescription, Status.valueOf(status), startTime, duration);
+            System.out.println("Task = " + task);
             taskManager.addTask(task);
             sendText(exchange, "Задача успешно создана.", 201);
         }
